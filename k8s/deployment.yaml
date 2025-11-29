@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llm-inference
+  namespace: llm-inference
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: llm-inference
+  template:
+    metadata:
+      labels:
+        app: llm-inference
+    spec:
+      containers:
+      - name: llm-service
+        image: arshadvani/llm-inference:v5
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: MODEL_PATH
+          value: "/app/models/codellama-7b-instruct-q4.gguf"
+        resources:
+          requests:
+            memory: "4Gi"
+            cpu: "2"
+          limits:
+            memory: "8Gi"
+            cpu: "4"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 120
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        volumeMounts:
+        - name: models
+          mountPath: /app/models
+      # Init container to download model
+      initContainers:
+      - name: download-model
+        image: alpine:latest
+        command: ['sh', '-c']
+        args:
+        - |
+          apk add --no-cache wget
+          cd /models
+          if [ ! -f codellama-7b-instruct-q4.gguf ]; then
+            echo "Downloading CodeLlama 7B Instruct model..."
+            wget https://huggingface.co/TheBloke/CodeLlama-7B-Instruct-GGUF/resolve/main/codellama-7b-instruct.Q4_K_M.gguf \
+              -O codellama-7b-instruct-q4.gguf
+            echo "Model downloaded successfully!"
+          else
+            echo "Model already exists, skipping download."
+          fi
+        volumeMounts:
+        - name: models
+          mountPath: /models
+      volumes:
+      - name: models
+        emptyDir: {}

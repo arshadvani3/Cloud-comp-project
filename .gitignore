@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+*.so
+
+# Models (too large for git)
+models/*.gguf
+models/*.bin
+
+# IDE
+.vscode/
+.idea/
+*.swp
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Kubernetes
+k8s/secrets/
+*.key
+*.pem
+*.kubeconfig
+*kubeconfig*
+
+# Logs
+*.log
+logs/
+
+# Test results
+benchmark_results.json
+advanced_test_results_*.json
+*.png
+
+# Local config
+config
+.env
